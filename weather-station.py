@@ -1,5 +1,6 @@
 import time
 import requests
+from meteocalc import Temp, dew_point, heat_index
 from matrix_lite import led
 from matrix_lite import sensors
 	
@@ -48,6 +49,25 @@ def humidityReadout():
 
 	time.sleep(5)
 	
+def heatIndex():
+	temperatureHI = (sensors.pressure.read().temperature) - 5
+	humidityHI = sensors.humidity.read().humidity
+	hi = heat_index(temperature=temperatureHI, humidity= humidityHI)
+
+	ledSet = []
+
+	for x in range(1, int(hi)):
+		ledSet.append((25,0,25,0))
+		led.set(ledSet)
+		time.sleep(0.1)
+
+	if (hi >= 40):
+		phoneContact()
+		dangerAlert()
+
+	print(hi)
+	time.sleep(5)
+
 def phoneContact():
 	url = 'https://maker.ifttt.com/trigger/call/with/key/br6w0TeQJiNDHpWuKYInm6'
 	x = requests.post(url, data = 'test')
@@ -65,5 +85,6 @@ while True:
 	led.set('Black')
 	temperatureReadout(0)
 	humidityReadout()
+	heatIndex()
 	led.set('Black')
 	
