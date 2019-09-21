@@ -1,3 +1,19 @@
+const Firestore = require('@google-cloud/firestore')
+const firestore = new Firestore({
+    projectId: 'shellhacks2019-1f061',
+    keyFileName: '../shellhacks2019-1f061-0e7bb7b00044.json'
+})
+
+
+let documentRef = firestore.doc('users/6DpUCcj3yX8Zfj9goBQ1')
+documentRef.get().then(documentSnapshot => {
+    if (documentSnapshot.exists) {
+        console.log(createTime.toDate())
+    }
+}).catch((err) => {
+    console.log(err)
+    console.log("Promise rejected")
+})
 const express = require('express')
 const bodyParser = require('body-parser')
 
@@ -16,6 +32,8 @@ app.post('/markers', (req,res) => {
         let temp = req.body.temp
         let humidity = req.body.humidity
         let hasFallen = req.body.fall
+        let hasFlooded = req.body.flooded
+        let body_text = req.body.text
 
         
     } catch (e) {
