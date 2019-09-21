@@ -13,13 +13,16 @@ app.get('/markers', (req, res) => {
 app.post('/markers', (req,res) => {
     try {
         const data = req.body
+        let temp = req.body.temp
+        let humidity = req.body.humidity
+        let hasFallen = req.body.fall
+
         
     } catch (e) {
-        next(e);
+        res.status(500).send('Nan')
     }
 })
 
-// app.use('/api/v1', router)
 
 const server = app.listen(8080, () => {
     const host = server.address().address
