@@ -31,30 +31,27 @@ app.get('/markers',async (req, res) => {
     });
     res.status(200).send(alldata)
 })
-app.post('/addMarker', async (req,res) => {
+app.post('/addMarker',async (req,res) => {
     let input = req.body
     let humid = req.body.humidity
     let hf = req.body.hasFlooded
     let bodyt = req.body.bodytext
     let hfall = req.body.fall
     let temp = req.body.temp
-    const theid = uuidv4()
-    console.log(theid)
-    try {
-        db.collection('users').doc(theid).set(
+    await db.collection('users').add(
             {
                 "humidity": humid,
                 "hasFlooded": hf,
                 "bodytext": bodyt,
                 "temp": temp
             }
-        ).then(function() {
-            console.log(`document ${id} created`);
-        })
-        res.status(200).send(input)
-    } catch(error) {
-        res.status(502).send(error)
-    }
+    ).then(ref => {
+        console.log(ref.id)
+    }).catch((error) => {
+        console.log(error)
+        res.status(500).send(error)
+    })
+    res.status(200).send(input)
 })
 
 
