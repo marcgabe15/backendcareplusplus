@@ -1,30 +1,33 @@
-const Firestore = require('@google-cloud/firestore')
-const firestore = new Firestore({
-    projectId: 'shellhacks2019-1f061',
-    keyFileName: '../shellhacks2019-1f061-0e7bb7b00044.json'
-})
-
-
-let documentRef = firestore.doc('users/6DpUCcj3yX8Zfj9goBQ1')
-documentRef.get().then(documentSnapshot => {
-    if (documentSnapshot.exists) {
-        console.log(createTime.toDate())
+const admin = require('firebase-admin')
+let serviceAccount = require('./shellhacks2019-e4acf182aaa4.json')
+admin.initializeApp(
+    {
+        credential: admin.credential.cert(serviceAccount)
     }
-}).catch((err) => {
-    console.log(err)
-    console.log("Promise rejected")
-})
+)
+let db = admin.firestore();
+
+
 const express = require('express')
 const bodyParser = require('body-parser')
 
 const app = express()
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({extended: false}))
-app.get('/markers', (req, res) => {
-    const the_data = {
-        worked: 'YAy'
-    }    
-    res.status(200).send('Hello World')
+app.get('/markers',async (req, res) => {
+    let alldata = []
+    await db.collection('users').get()
+        .then((snapshot) => {
+            snapshot.forEach((doc) => {
+            console.log(doc.id, '=>', JSON.stringify(doc.data()));
+            alldata.push(JSON.stringify(doc.data()))
+            });
+        })
+        .catch((err) => {
+            console.log('Error getting documents', err);
+            res.status(500).send('Error')
+    });
+    res.status(200).send(alldata)
 })
 app.post('/markers', (req,res) => {
     try {
