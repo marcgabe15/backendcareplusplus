@@ -1,53 +1,93 @@
 import time
 import requests
-import asyncio
-import websockets
-import json
-import pprint
+from matrix_lite import gpio
+from meteocalc import Temp, dew_point, heat_index
 from matrix_lite import led
 from matrix_lite import sensors
+	
+def temperatureReadout(override):
+	temperature = sensors.pressure.read().temperature
+	print(temperature)
 
-def detectFall():
-    data = sensors.imu.read()
-    print(data.accel_x)
-    print(data.accel_y)
-    print(data.accel_z)
-    print ("--------------------")
+	temperatureLED = temperature - 7
 
-    if (abs(data.accel_x) > 1.90 and abs(data.accel_x) < 10):
-        print("Possible Fall")
-        time.sleep(3)
-        data = sensors.imu.read()
-        if (abs(data.gyro_x) > 2.5):
-            sendWebAlert()
-            fallDetected()
+	if (override > 0):
+		temperatureLED = override
 
-    time.sleep(0.250)
-    
-def fallDetected():
-    phoneContact()
-    while True:
-        led.set('Red')
-        time.sleep(.5)
-        led.set('Black')
-        time.sleep(.5)
+	ledSet = []
 
-def sendWebAlert():
-    uri = "https://shellhacks2019-1f061.appspot.com/addMarker"
-    #async with websockets.connect(uri) as websocket:
-    #    await websocket.send(json.dumps([{'temp' : '37.44', 'humidity' : '50.00', 'fall' : 'true', 'hasFlooded' : 'false', 'bodyTest' : 'Can you see clearly now'}]))
-    x = requests.post(uri, json = {'humidity' : 37.44, 'hasFlooded' : 'false', 'bodytext' : 'JARED BIG BOOTY JUDY', 'temp' : 37.44})
-    print(x)
-    uri = "https://shellhacks2019-1f061.appspot.com/markers"
-    x = requests.get(uri, data = '')
-    print(x)
-    
+	for x in range(1, int(temperatureLED)):
+		ledSet.append((25,0,0,0))
+		led.set(ledSet)
+		time.sleep(0.1)
+
+	led.set(ledSet)
+
+	if(temperatureLED > 28):
+		phoneContact()
+		led.set('White')
+		dangerAlert()
+
+	time.sleep(5)
+
+def humidityReadout():
+	humidity = sensors.humidity.read().humidity
+	print(humidity)
+
+	humidityLED = int((humidity / 100) * 35)
+
+	if (humidityLED > 34):
+		humidityLED = humidityLED / 2
+		brightness = 2
+	else:
+		brightness = 1
+	ledSet = []
+
+	for x in range(1, int(humidityLED)):
+		ledSet.append((0,0,25 * brightness,0))
+		led.set(ledSet)
+		time.sleep(0.1)
+
+	time.sleep(5)
+	
+def heatIndex():
+	temperatureHI = (sensors.pressure.read().temperature) - 5
+	humidityHI = sensors.humidity.read().humidity
+	hi = heat_index(temperature=temperatureHI, humidity= humidityHI)
+
+	ledSet = []
+
+	for x in range(1, int(hi)):
+		ledSet.append((25,0,25,0))
+		led.set(ledSet)
+		time.sleep(0.1)
+
+	if (int(hi) >= 40):
+		phoneContact()
+		dangerAlert()
+
+	print(hi)
+	time.sleep(5)
 
 def phoneContact():
-	url = 'https://maker.ifttt.com/trigger/temp/with/key/br6w0TeQJiNDHpWuKYInm6'
-	#x = requests.post(url, data = 'test')
+	url = 'https://maker.ifttt.com/trigger/call/with/key/br6w0TeQJiNDHpWuKYInm6'
+	x = requests.post(url, data = 'test')
 	print("Reached")
 
+def dangerAlert():
+	while True:
+		led.set('Red')
+		time.sleep(.5)
+		led.set('Black')
+		time.sleep(.5)
+
+gpio.setFunction(0, 'DIGITAL')
+gpio.setMode(0, "input")
+
 while True:
-    led.set('Black')
-    detectFall()
+	led.set('Black')
+	temperatureReadout(0)
+	humidityReadout()
+	heatIndex()
+	led.set('Black')
+	
