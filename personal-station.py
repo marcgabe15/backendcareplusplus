@@ -36,11 +36,11 @@ def sendWebAlert():
     uri = "https://shellhacks2019-1f061.appspot.com/addMarker"
     #async with websockets.connect(uri) as websocket:
     #    await websocket.send(json.dumps([{'temp' : '37.44', 'humidity' : '50.00', 'fall' : 'true', 'hasFlooded' : 'false', 'bodyTest' : 'Can you see clearly now'}]))
-    x = requests.post(uri, json = {'humidity' : 37.44, 'hasFlooded' : 'false', 'bodytext' : 'JARED BIG BOOTY JUDY', 'temp' : 37.44})
+    x = requests.post(uri, json = {'humid' : 37.44, 'heatindex' : 50.00, 'bodytext' : 'SOS', 'fallenAlert' : 'false', 'temp' : 100})
     print(x)
-    uri = "https://shellhacks2019-1f061.appspot.com/markers"
-    x = requests.get(uri, data = '')
-    print(x)
+    #uri = "https://shellhacks2019-1f061.appspot.com/markers"
+    #x = requests.get(uri, data = '')
+    #print(x)
     
 
 def phoneContact():
