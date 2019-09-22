@@ -1,5 +1,7 @@
 import time
+import datetime
 import requests
+import json
 from matrix_lite import gpio
 from meteocalc import Temp, dew_point, heat_index
 from matrix_lite import led
@@ -9,7 +11,7 @@ def temperatureReadout(override):
 	temperature = sensors.pressure.read().temperature
 	print(temperature)
 
-	temperatureLED = temperature - 7
+	temperatureLED = temperature - 10
 
 	if (override > 0):
 		temperatureLED = override
@@ -23,7 +25,7 @@ def temperatureReadout(override):
 
 	led.set(ledSet)
 
-	if(temperatureLED > 28):
+	if(temperatureLED > 40):
 		phoneContact()
 		led.set('White')
 		dangerAlert()
@@ -51,7 +53,7 @@ def humidityReadout():
 	time.sleep(5)
 	
 def heatIndex():
-	temperatureHI = (sensors.pressure.read().temperature) - 5
+	temperatureHI = (sensors.pressure.read().temperature) - 8
 	humidityHI = sensors.humidity.read().humidity
 	hi = heat_index(temperature=temperatureHI, humidity= humidityHI)
 
@@ -81,13 +83,26 @@ def dangerAlert():
 		led.set('Black')
 		time.sleep(.5)
 
+def sendWeatherData():
+	humidity = sensors.humidity.read().humidity
+	temperature = sensors.pressure.read().temperature - 8
+	hi = heat_index(temperature=temperature, humidity= humidity)
+	uri = "https://shellhacks2019-1f061.appspot.com/addMarker"
+	x = requests.post(uri, json = {'humid' : int(humidity), 'heatindex' : int(hi), 'bodytext' : 'SOS', 'fallenAlert' : 'false', 'temp' : int(temperature)})
+	print(x)
+
 gpio.setFunction(0, 'DIGITAL')
 gpio.setMode(0, "input")
 
 while True:
+	currentDT = datetime.datetime.now()
 	led.set('Black')
 	temperatureReadout(0)
 	humidityReadout()
 	heatIndex()
+
+	if (currentDT.minute % 6 == 0):
+		sendWeatherData()
+
 	led.set('Black')
 	
